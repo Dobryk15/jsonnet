@@ -41,10 +41,18 @@ class TypeVariable(object):
     
 
 class TypeRowOperator(object):
-    """An n-ary type constructor which builds a new type from old"""
+    """Record constructor
+        fields - dict(field_name, field_type)
+        flags - dict(field_name, field_flag), where:
+            field_flag = 'r' # required and needs to be overloaded in each child obj
+                        |'ol' # overloaded but still should be presented in other child objects 
+                        |'o' # optional (field in child class that may be in base class)
+            flags are used only for special fields
+    """
 
-    def __init__(self, fields):
+    def __init__(self, fields, flags={}):
         self.fields = fields
+        self.flags = flags
 
     def __str__(self):
         num_types = len(self.fields)
