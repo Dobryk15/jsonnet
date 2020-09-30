@@ -180,8 +180,11 @@ def fresh(t, non_generic):
         elif isinstance(p, TypeOperator):
             return TypeOperator(p.name, [freshrec(x) for x in p.types])
         elif isinstance(p, TypeRowOperator):
-            return TypeRowOperator({k: freshrec(v) for k, v in p.fields.items()})
-
+            return TypeRowOperator(
+                {k: freshrec(v) for k, v in p.fields.items()},
+                p.flags
+            )
+    
     return freshrec(t)
 
 def type_copy(t):
@@ -194,7 +197,7 @@ def type_copy(t):
     elif isinstance(t, TypeOperator):
         new_instance = TypeOperator(t.name, [type_copy(x) for x in t.types])
     elif isinstance(t, TypeRowOperator):
-        new_instance = TypeRowOperator({k: type_copy(v) for k, v in t.fields.items()})
+        new_instance = TypeRowOperator({k: type_copy(v) for k, v in t.fields.items()}, t.flags)
     return new_instance
 
 

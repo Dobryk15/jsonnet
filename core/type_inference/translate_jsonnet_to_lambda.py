@@ -3,7 +3,7 @@ import lambda_ast as lam_ast
 from lambda_types import TypeVariable, TypeRowOperator, Function, TypeOperator
 
 
-def translate_to_lambda_ast(ast_: j_ast.AST, my_env):
+def translate_to_lambda_ast(ast_: j_ast.AST, my_env, obj_record):
     if isinstance(ast_, j_ast.Object):
         location = translate_location(ast_.location)
         ast_.fields = {
@@ -11,19 +11,21 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env):
         }
         record = build_record_type_constructor(ast_.fields)
         record_id = get_next_record_id(my_env)
+        obj_record[ast_] = record_id
         my_env[record_id] = record
 
         field_keys = list(ast_.fields.keys())
         body = apply_record(field_keys, record_id, my_env, location)
-        return build_letrec_and(field_keys, ast_.fields, body, my_env, location)
+        return build_letrec_and(field_keys, ast_.fields, body, my_env, 
+                                location, obj_record)
 
     elif isinstance(ast_, j_ast.Local):
         location = translate_location(ast_.location)
         bind_dic = {}
         for bind in ast_.binds:
-            translated_body = translate_to_lambda_ast(bind.body, my_env)
+            translated_body = translate_to_lambda_ast(bind.body, my_env, obj_record)
             bind_dic[bind.var] = (translated_body, None)
-        body = translate_to_lambda_ast(ast_.body, my_env)
+        body = translate_to_lambda_ast(ast_.body, my_env, obj_record)
         if isinstance(body, lam_ast.LetrecAnd):
             body.bindings.update(bind_dic)
             return body
@@ -34,8 +36,8 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env):
         location = translate_location(ast_.location)
         def build_apply(fn, args, location):
             if not args:
-                return translate_to_lambda_ast(fn, my_env)
-            translated_arg = translate_to_lambda_ast(args[-1].expr, my_env)
+                return translate_to_lambda_ast(fn, my_env, obj_record)
+            translated_arg = translate_to_lambda_ast(args[-1].expr, my_env, obj_record)
             return lam_ast.Apply(build_apply(fn, args[:-1], location), 
                                  translated_arg, 
                                  location)
@@ -47,7 +49,8 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env):
     elif isinstance(ast_, j_ast.BinaryOp):
         location = translate_location(ast_.location)
         if ast_.op == '+':
-            return build_plus_op(ast_.left_arg, ast_.right_arg, my_env, location)
+            return build_plus_op(ast_.left_arg, ast_.right_arg, my_env, location, 
+                                 obj_record)
         else:
             raise Exception('Not translated yet!\n')
 
@@ -63,7 +66,7 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env):
     elif isinstance(ast_, j_ast.Function):
         def build_lambda(args, body):
             if not args:
-                return translate_to_lambda_ast(body, my_env)
+                return translate_to_lambda_ast(body, my_env, obj_record)
             return lam_ast.Lambda(args[0].id, build_lambda(args[1:], body))
         return build_lambda(ast_.arguments, ast_.body)
 
@@ -134,10 +137,10 @@ def build_record_type_constructor(fields):
     return rec_build(0, len(var_type), var_type, record_type)
 
 
-def build_letrec_and(field_keys, fields, body, env, location):
+def build_letrec_and(field_keys, fields, body, env, location, obj_record):
     translated_fields = {}
     for key in field_keys:
-        translated_body = translate_to_lambda_ast(fields[key], env)
+        translated_body = translate_to_lambda_ast(fields[key], env, obj_record)
         name, loc = key
         translated_fields[name] = (translated_body, loc)
     return lam_ast.LetrecAnd(translated_fields, body, location)
@@ -172,10 +175,10 @@ def translate_field_name(name):
         raise Exception(f"Expected LiteralString but got {name.__class__}")
 
 
-def build_plus_op(left_arg, right_arg, env, location):
+def build_plus_op(left_arg, right_arg, env, location, obj_record):
     if isinstance(right_arg, j_ast.Object):
-        base_obj = translate_to_lambda_ast(left_arg, env)
-        child_obj = translate_to_lambda_ast(right_arg, env)
+        base_obj = translate_to_lambda_ast(left_arg, env, obj_record)
+        child_obj = translate_to_lambda_ast(right_arg, env, obj_record)
         return lam_ast.Inherit(base_obj, child_obj, location)
     else:
         var = TypeVariable()
@@ -183,9 +186,9 @@ def build_plus_op(left_arg, right_arg, env, location):
         env[plus_id] = Function(var, Function(var, var))
         return lam_ast.Apply(lam_ast.Apply(lam_ast.Identifier(plus_id),
                                            translate_to_lambda_ast(
-                                               left_arg, env),
+                                               left_arg, env, obj_record),
                                            location),
-                             translate_to_lambda_ast(right_arg, env),
+                             translate_to_lambda_ast(right_arg, env, obj_record),
                              location)
 
 def translate_location(location):
