@@ -9,10 +9,7 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env, obj_record):
         ast_.fields = {
             translate_field_name(name): val for name, val in ast_.fields.items()
         }
-        record = build_record_type_constructor(ast_.fields)
-        record_id = get_next_record_id(my_env)
-        obj_record[ast_] = record_id
-        my_env[record_id] = record
+        record_id, _ = obj_record[ast_]
 
         field_keys = list(ast_.fields.keys())
         body = apply_record(field_keys, record_id, my_env, location)
@@ -116,27 +113,6 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env, obj_record):
         raise Exception('Node is not found in jsonnet_ast\n')
 
 
-def build_record_type_constructor(fields):
-    var_type = {}
-    name_type = {}
-    for i, field in enumerate(fields):
-        name, _ = field
-        var = f'var{i}'
-        var_type[var] = TypeVariable()
-        name_type[name] = var_type[var]
-    record_type = TypeRowOperator(name_type)
-
-    def rec_build(i, n, var_type, record_type):
-        if n == 0:
-            return record_type
-        var = var_type[f'var{i}']
-        if (i == n-1):
-            return Function(var, record_type)
-        return Function(var, rec_build(i+1, n, var_type, record_type))
-
-    return rec_build(0, len(var_type), var_type, record_type)
-
-
 def build_letrec_and(field_keys, fields, body, env, location, obj_record):
     translated_fields = {}
     for key in field_keys:
@@ -144,12 +120,6 @@ def build_letrec_and(field_keys, fields, body, env, location, obj_record):
         name, loc = key
         translated_fields[name] = (translated_body, loc)
     return lam_ast.LetrecAnd(translated_fields, body, location)
-
-
-def get_next_record_id(env):
-    record_id = "record_{n}".format(n=env["__record_count__"])
-    env["__record_count__"] += 1
-    return record_id
 
 
 def get_next_plus_id(env):

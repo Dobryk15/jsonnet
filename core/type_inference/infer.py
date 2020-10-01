@@ -4,9 +4,10 @@ import argparse
 import hm_algo
 import jsonnet_ast as ast
 from lambda_types import TypeVariable
-from translate_jsonnet_to_lambda import translate_to_lambda_ast
 from rename import rename_local
-from extend_record_type import extend
+from build_records import build
+from extend_records import extend
+from translate_jsonnet_to_lambda import translate_to_lambda_ast
 
 
 def get_jsonnet_ast_str(jsonnet, rebuild=False):
@@ -57,10 +58,11 @@ def run(jsonnet_program):
 
     env = create_init_env()
     obj_record = {}
+    build(jsonnet_ast, env, obj_record)
+    extend(jsonnet_ast, obj_record, None)
     lambda_ast = translate_to_lambda_ast(jsonnet_ast, env, obj_record)
     print(f"\nLambda AST:\n{lambda_ast}")
 
-    extend(jsonnet_ast, env, obj_record, None)
     
     return hm_algo.try_exp(env, lambda_ast)
 
