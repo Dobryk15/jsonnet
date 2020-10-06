@@ -58,11 +58,11 @@ def run(jsonnet_program):
 
     env = create_init_env()
     obj_record = {}
+    
     build(jsonnet_ast, env, obj_record)
-    extend(jsonnet_ast, obj_record, None)
+    extend(jsonnet_ast, None, None, env, obj_record)
     lambda_ast = translate_to_lambda_ast(jsonnet_ast, env, obj_record)
     print(f"\nLambda AST:\n{lambda_ast}")
-
     
     return hm_algo.try_exp(env, lambda_ast)
 
