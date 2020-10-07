@@ -50,9 +50,9 @@ class TypeRowOperator(object):
             flags are used only for special fields
     """
 
-    def __init__(self, fields, flags={}):
+    def __init__(self, fields, flags=None):
         self.fields = fields
-        self.flags = flags
+        self.flags = {}
 
     def __str__(self):
         num_types = len(self.fields)
