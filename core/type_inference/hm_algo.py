@@ -125,7 +125,6 @@ def analyse(node, env, non_generic=None):
     elif isinstance(node, Inherit):
         left_row = analyse(node.base, env, non_generic)
         new_env = env.copy()
-        update_env_with_obj_type_info(node.base, new_env)
         right_row = analyse(node.child, new_env, non_generic)
         
         # since we work with the copy of base class, we over-approximate it,
