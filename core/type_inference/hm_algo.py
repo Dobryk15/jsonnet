@@ -131,8 +131,7 @@ def analyse(node, env, non_generic=None):
         # since we work with the copy of base class, we over-approximate it,
         # and its field names can be used with different types within different objects
         result_type = TypeVariable()
-        left_row_copy = type_copy(left_row)
-        unify(left_row_copy, result_type, node.location)
+        unify(left_row, result_type, node.location)
         unify(right_row, result_type, node.location)
         return result_type
     assert 0, "Unhandled syntax node {0}".format(type(node))
@@ -186,19 +185,6 @@ def fresh(t, non_generic):
             )
     
     return freshrec(t)
-
-def type_copy(t):
-    if isinstance(t, TypeVariable):
-        new_instance = TypeVariable()
-        new_instance.id = t.id
-        if t.instance:
-            new_instance.instance = type_copy(t.instance)
-            new_instance.__name = t.name
-    elif isinstance(t, TypeOperator):
-        new_instance = TypeOperator(t.name, [type_copy(x) for x in t.types])
-    elif isinstance(t, TypeRowOperator):
-        new_instance = TypeRowOperator({k: type_copy(v) for k, v in t.fields.items()}, t.flags)
-    return new_instance
 
 
 def unify(t1, t2, loc=None, field_name=None):
