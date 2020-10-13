@@ -8,6 +8,7 @@ from rename import rename_local
 from build_records import build
 from extend_records import extend
 from translate_jsonnet_to_lambda import translate_to_lambda_ast
+import cute_print
 
 
 def get_jsonnet_ast_str(jsonnet, rebuild=False):
@@ -49,9 +50,10 @@ def run(jsonnet_program):
        to Lambda AST. Runs type inference algorithm.
     """
     jsonnet_ast_str = get_jsonnet_ast_str(jsonnet_program)
-    print(f"\nAST:\n{jsonnet_ast_str}")
-
     jsonnet_ast = parse_ast(jsonnet_ast_str)
+
+    print("\n----Jsonnet AST----")
+    cute_print.cute_print(jsonnet_ast, indent='    ')
 
     name_env = {'std': 'std'}
     rename_local(jsonnet_ast, name_env)
@@ -62,7 +64,7 @@ def run(jsonnet_program):
     build(jsonnet_ast, env, obj_record)
     extend(jsonnet_ast, None, None, env, obj_record)
     lambda_ast = translate_to_lambda_ast(jsonnet_ast, env, obj_record)
-    print(f"\nLambda AST:\n{lambda_ast}")
+    print(f"\n----Lambda AST----\n{lambda_ast}")
     
     return hm_algo.try_exp(env, lambda_ast)
 
