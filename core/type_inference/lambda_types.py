@@ -52,7 +52,10 @@ class TypeRowOperator(object):
 
     def __init__(self, fields, flags=None):
         self.fields = fields
-        self.flags = {}
+        if not flags:
+            self.flags = {}
+        else:
+            self.flags = flags
 
     def __str__(self):
         num_types = len(self.fields)
