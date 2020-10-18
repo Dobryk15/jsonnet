@@ -131,15 +131,13 @@ def analyse(node, env, non_generic=None):
             logging.debug(f'End of processing of field "{v}"')
         return analyse(node.body, new_env, new_non_generic)
     elif isinstance(node, Inherit):
-        left_row = analyse(node.base, env, non_generic)
-        new_env = env.copy()
-        right_row = analyse(node.child, new_env, non_generic)
-        
-        # since we work with the copy of base class, we over-approximate it,
-        # and its field names can be used with different types within different objects
         logging.debug(f'Start processing Inherit node')
+
+        left_row = analyse(node.base, env, non_generic)
+        right_row = analyse(node.child, env, non_generic)
         logging.debug(f'Type of base: {left_row}')
         logging.debug(f'Type of child: {right_row}')
+
         result_type = TypeVariable()
         unify(left_row, result_type, node.location)
         unify(right_row, result_type, node.location)
