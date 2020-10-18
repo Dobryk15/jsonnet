@@ -11,6 +11,7 @@ from __future__ import print_function
 from lambda_ast import *
 from lambda_types import *
 import copy
+import logging
 
 # =======================================================#
 # Exception types
@@ -72,6 +73,7 @@ def analyse(node, env, non_generic=None):
 
     if isinstance(node, Identifier):
         result_type = get_type(node.name, env, non_generic)
+        logging.debug(f'Identifier: {node.name}, type in env: {result_type}')
         return result_type
     elif isinstance(node, LiteralNumber):
         result_type = Number
@@ -118,9 +120,15 @@ def analyse(node, env, non_generic=None):
             new_env[v] = new_type
             new_non_generic.add(new_type)
         for v, (defn, loc) in node.bindings.items():
+            logging.debug(f'LetrecAnd: Start processing field "{v}"')
             v_type = new_env[v]
+            logging.debug(f'Field: "{v}", type in env: {v_type}')
             defn_type = analyse(defn, new_env, new_non_generic)
+            logging.debug(f'Field: "{v}", type in env after its value analysis: {v_type}')
+            logging.debug(f'Field: "{v}", analysed type of its value: {defn_type}')
             unify(v_type, defn_type, loc, v)
+            logging.debug(f'Field: "{v}", type in env after unification: {v_type}')
+            logging.debug(f'End of processing of field "{v}"')
         return analyse(node.body, new_env, new_non_generic)
     elif isinstance(node, Inherit):
         left_row = analyse(node.base, env, non_generic)
@@ -129,9 +137,15 @@ def analyse(node, env, non_generic=None):
         
         # since we work with the copy of base class, we over-approximate it,
         # and its field names can be used with different types within different objects
+        logging.debug(f'Start processing Inherit node')
+        logging.debug(f'Type of base: {left_row}')
+        logging.debug(f'Type of child: {right_row}')
         result_type = TypeVariable()
         unify(left_row, result_type, node.location)
         unify(right_row, result_type, node.location)
+        logging.debug(f'After unification, type of base: {left_row}')
+        logging.debug(f'After unification, type of child: {right_row}')
+        logging.debug(f'End of Inherit node processing')
         return result_type
     assert 0, "Unhandled syntax node {0}".format(type(node))
 
@@ -226,7 +240,7 @@ def unify(t1, t2, loc=None, field_name=None):
         unified_fields.update(b.fields)
         b.fields = unified_fields
     else:
-        assert 0, "Not unified"
+        assert 0, "Not unified"    
 
 
 def prune(t):

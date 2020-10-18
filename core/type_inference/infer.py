@@ -1,5 +1,6 @@
 import subprocess
 import argparse
+import logging
 
 import hm_algo
 import jsonnet_ast as ast
@@ -75,6 +76,12 @@ def read_file(file_name):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        filename='core/type_inference/logfile.log',
+        filemode='w',
+        level=logging.DEBUG, 
+        format='%(levelname)s:%(filename)s:%(lineno)d:%(message)s')
+
     parser = argparse.ArgumentParser(description='Run type inference.')
     parser.add_argument('--file_path', type=str, required=True,
                         help='path to file with jsonnet program')
