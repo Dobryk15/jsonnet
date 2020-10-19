@@ -10,9 +10,9 @@ def translate_to_lambda_ast(ast_: j_ast.AST, my_env, obj_record):
         fields = {
             translate_field_name(name): val for name, val in ast_.fields.items()
         }
-        for field, flag in record.flags.items():
-            if flag == 'r':
-                fields[(field, j_ast.Location('0:0,0:0'))] = j_ast.LiteralNull()
+        for field_name, field_body in record.fields.items():
+            if '!' in field_body.flags:
+                fields[(field_name, j_ast.Location('0:0,0:0'))] = j_ast.LiteralNull()
 
         field_keys = list(fields.keys())
         body = apply_record(field_keys, record_id, my_env, location)

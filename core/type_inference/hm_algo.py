@@ -191,8 +191,7 @@ def fresh(t, non_generic):
             return TypeOperator(p.name, [freshrec(x) for x in p.types])
         elif isinstance(p, TypeRowOperator):
             return TypeRowOperator(
-                {k: freshrec(v) for k, v in p.fields.items()},
-                p.flags
+                {k: Field(v.name, freshrec(v.type), v.flags.copy()) for k, v in p.fields.items()},
             )
     
     return freshrec(t)
@@ -233,7 +232,7 @@ def unify(t1, t2, loc=None, field_name=None):
     elif isinstance(a, TypeRowOperator) and isinstance(b, TypeRowOperator):
         for k in a.fields:
             if k in b.fields:
-                unify(a.fields[k], b.fields[k], loc, k)
+                unify(a.fields[k].type, b.fields[k].type, loc, k)
         unified_fields = a.fields.copy()
         unified_fields.update(b.fields)
         b.fields = unified_fields

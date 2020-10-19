@@ -41,31 +41,42 @@ class TypeVariable(object):
     
 
 class TypeRowOperator(object):
-    """Record constructor
-        fields - dict(field_name, field_type)
-        flags - dict(field_name, field_flag), where:
-            field_flag = 'r' # required and needs to be overloaded in each child obj
-                        |'ol' # overloaded but still should be presented in other child objects 
-                        |'o' # optional (field in child class that may be in base class)
-            flags are used only for special fields
-    """
+    """ Record/Row constructor """
 
-    def __init__(self, fields, flags=None):
+    def __init__(self, fields):
+        """ fields: dict(field_name: str, field: Field) """
         self.fields = fields
-        if not flags:
-            self.flags = {}
-        else:
-            self.flags = flags
 
     def __str__(self):
         num_types = len(self.fields)
-
         if num_types == 0:
             return '{}'
-
-        name_type_pairs = [f"{x[0]}: {x[1]}" for x in self.fields.items()]
-
+        name_type_pairs = [f'{field}' for _, field in self.fields.items()]
         return "{{{0}}}".format(', '.join(name_type_pairs))
+
+
+class Field(object):
+    """ Class that keeps information about the type and flags of the field,
+        and maybe about location.
+    """
+    def __init__(self, field_name, field_type, flags):
+        """ field_flag = '!' # required and needs to exist on the right oder left in the inheritance chain
+                        |'?' # optional field 
+        """
+        self.name = field_name
+        self.type = field_type
+        self.flags = flags
+        self.location = None
+    
+    def __str__(self):
+        return "{name}: {t}".format(name=self.name, t=self.type)
+    
+    def __repr__(self):
+        return "Field(name={name}, type={t}, flags={flags})".format(
+            name = self.name,
+            t = self.type,
+            flags = self.flags
+        )
     
 
 class TypeOperator(object):

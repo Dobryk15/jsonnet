@@ -1,5 +1,5 @@
 import jsonnet_ast as j_ast
-from lambda_types import TypeVariable, TypeRowOperator, Function, TypeOperator
+from lambda_types import TypeVariable, TypeRowOperator, Function, TypeOperator, Field
 
 
 def build(ast_: j_ast.AST, my_env, obj_record):
@@ -88,7 +88,7 @@ def build_record_type_constructor(fields):
     for i, name in enumerate(fields):
         var = f'var{i}'
         var_type[var] = TypeVariable()
-        name_type[name] = var_type[var]
+        name_type[name] = Field(name, var_type[var], set())
     record = TypeRowOperator(name_type)
 
     def rec_build(i, n, var_type, record):

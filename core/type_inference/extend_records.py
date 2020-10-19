@@ -71,9 +71,9 @@ def extend(ast_: ast.AST, record, record_id, env, obj_record):
             name = ast_.index.value
             if isinstance(record, lt.TypeRowOperator):
                 if name not in record.fields:
-                    record.flags[name] = 'r'
                     var = lt.TypeVariable()
-                    record.fields[name] = var
+                    new_field = lt.Field(name, var, {'!'})
+                    record.fields[name] = new_field
                     record_type = env[record_id]
                     update_record_type(record_type, record, var)
             else:
