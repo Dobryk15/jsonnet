@@ -127,11 +127,12 @@ def analyse(node, env, non_generic=None):
             logging.debug(f'Field: "{v}", type in env after its value analysis: {v_type}')
             logging.debug(f'Field: "{v}", analysed type of its value: {defn_type}')
             unify(v_type, defn_type, loc, v)
-            logging.debug(f'Field: "{v}", type in env after unification: {v_type}')
+            new_env[v] = defn_type
+            logging.debug(f'Field: "{v}", type in env after unification: {new_env[v]}')
             logging.debug(f'End of processing of field "{v}"')
         return analyse(node.body, new_env, new_non_generic)
     elif isinstance(node, Inherit):
-        logging.debug(f'Start processing Inherit node')
+        logging.debug('Start processing Inherit node')
 
         left_row = analyse(node.base, env, non_generic)
         right_row = analyse(node.child, env, non_generic)
@@ -143,7 +144,7 @@ def analyse(node, env, non_generic=None):
         unify(right_row, result_type, node.location)
         logging.debug(f'After unification, type of base: {left_row}')
         logging.debug(f'After unification, type of child: {right_row}')
-        logging.debug(f'End of Inherit node processing')
+        logging.debug('End of Inherit node processing')
         return result_type
     assert 0, "Unhandled syntax node {0}".format(type(node))
 
@@ -233,9 +234,9 @@ def unify(t1, t2, loc=None, field_name=None):
         for k in a.fields:
             if k in b.fields:
                 unify(a.fields[k].type, b.fields[k].type, loc, k)
-        unified_fields = a.fields.copy()
-        unified_fields.update(b.fields)
-        b.fields = unified_fields
+        for k, field in a.fields.items():
+            if '?' not in field.flags and k not in b.fields:
+                b.fields[k] = field
     else:
         assert 0, "Not unified"    
 
